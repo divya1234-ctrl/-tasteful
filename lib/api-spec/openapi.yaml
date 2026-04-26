@@ -1,0 +1,439 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Tasteful food ordering API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: categories
+    description: Food categories
+  - name: dishes
+    description: Menu dishes
+  - name: orders
+    description: Customer orders
+  - name: stats
+    description: Dashboard summaries
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List categories
+      responses:
+        "200":
+          description: Categories list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  /dishes:
+    get:
+      operationId: listDishes
+      tags: [dishes]
+      summary: List dishes
+      parameters:
+        - in: query
+          name: categoryId
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: search
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: featured
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Dishes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dish"
+
+  /dishes/{id}:
+    get:
+      operationId: getDish
+      tags: [dishes]
+      summary: Get dish detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dish detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dish"
+        "404":
+          description: Not found
+
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List recent orders
+      responses:
+        "200":
+          description: Orders list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Place a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderInput"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+
+  /stats/summary:
+    get:
+      operationId: getStatsSummary
+      tags: [stats]
+      summary: Storefront stats summary
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsSummary"
+
+  /stats/popular-dishes:
+    get:
+      operationId: getPopularDishes
+      tags: [stats]
+      summary: Most popular dishes
+      responses:
+        "200":
+          description: Popular dishes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PopularDish"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: string
+        dishCount:
+          type: integer
+      required:
+        - id
+        - name
+        - slug
+        - description
+        - emoji
+        - dishCount
+
+    Dish:
+      type: object
+      properties:
+        id:
+          type: string
+        categoryId:
+          type: string
+        categoryName:
+          type: string
+        name:
+          type: string
+        tagline:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        imageUrl:
+          type: string
+        rating:
+          type: number
+          format: float
+        ratingCount:
+          type: integer
+        prepTimeMinutes:
+          type: integer
+        calories:
+          type: integer
+        spiceLevel:
+          type: integer
+          description: 0-3 chili peppers
+        isVegetarian:
+          type: boolean
+        isPopular:
+          type: boolean
+        isFeatured:
+          type: boolean
+        ingredients:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - categoryId
+        - categoryName
+        - name
+        - tagline
+        - description
+        - price
+        - imageUrl
+        - rating
+        - ratingCount
+        - prepTimeMinutes
+        - calories
+        - spiceLevel
+        - isVegetarian
+        - isPopular
+        - isFeatured
+        - ingredients
+
+    OrderItem:
+      type: object
+      properties:
+        dishId:
+          type: string
+        dishName:
+          type: string
+        unitPrice:
+          type: number
+          format: float
+        quantity:
+          type: integer
+        imageUrl:
+          type: string
+      required:
+        - dishId
+        - dishName
+        - unitPrice
+        - quantity
+        - imageUrl
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        deliveryAddress:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [received, preparing, on_the_way, delivered]
+        subtotal:
+          type: number
+          format: float
+        deliveryFee:
+          type: number
+          format: float
+        tax:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        createdAt:
+          type: string
+          format: date-time
+        estimatedReadyAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - orderNumber
+        - customerName
+        - customerEmail
+        - customerPhone
+        - deliveryAddress
+        - notes
+        - status
+        - subtotal
+        - deliveryFee
+        - tax
+        - total
+        - items
+        - createdAt
+        - estimatedReadyAt
+
+    CreateOrderItemInput:
+      type: object
+      properties:
+        dishId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+      required:
+        - dishId
+        - quantity
+
+    CreateOrderInput:
+      type: object
+      properties:
+        customerName:
+          type: string
+          minLength: 1
+        customerEmail:
+          type: string
+          format: email
+        customerPhone:
+          type: string
+          minLength: 1
+        deliveryAddress:
+          type: string
+          minLength: 1
+        notes:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CreateOrderItemInput"
+      required:
+        - customerName
+        - customerEmail
+        - customerPhone
+        - deliveryAddress
+        - items
+
+    StatsSummary:
+      type: object
+      properties:
+        totalDishes:
+          type: integer
+        totalCategories:
+          type: integer
+        ordersToday:
+          type: integer
+        averageRating:
+          type: number
+          format: float
+        averagePrepMinutes:
+          type: integer
+      required:
+        - totalDishes
+        - totalCategories
+        - ordersToday
+        - averageRating
+        - averagePrepMinutes
+
+    PopularDish:
+      type: object
+      properties:
+        dishId:
+          type: string
+        name:
+          type: string
+        imageUrl:
+          type: string
+        ordersCount:
+          type: integer
+        rating:
+          type: number
+          format: float
+      required:
+        - dishId
+        - name
+        - imageUrl
+        - ordersCount
+        - rating
